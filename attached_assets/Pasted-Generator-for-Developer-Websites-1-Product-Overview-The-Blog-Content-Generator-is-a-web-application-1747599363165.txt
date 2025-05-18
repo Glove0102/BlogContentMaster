@@ -1,0 +1,251 @@
+Generator for Developer Websites
+1. Product Overview
+The Blog Content Generator is a web application with a Python backend, designed specifically for developers with their own web applications and website projects. This tool creates blog content that perfectly matches the developer's existing website design and style, generating both a blog homepage and individual blog posts that look like native parts of the developer's site. The tool hosts CSS and JS files while providing downloadable HTML files for the developer to integrate with their site.
+2. Key Features
+2.1 User Authentication & Project Management
+
+Replit authentication integration
+Dashboard to create and manage multiple website projects
+
+2.2 Website Analysis & Template Creation
+
+Upload functionality for index.html and CSS files
+AI analysis of uploaded files to:
+
+Understand website style and visual elements
+Extract information about the website's purpose and business
+
+
+Generation of a blog homepage (blog.html) that matches the original site's design
+Creation of blog post templates styled to integrate seamlessly with the original site
+Server-side hosting of CSS and JS files with unique filenames (not CDN)
+
+2.3 Blog Content Creation
+
+Blog topic generation based on:
+
+User text input with AI-powered improvement
+Web page analysis for topic inspiration
+
+
+Content generation that contextually references the developer's website/product
+Integration of custom CTAs with buttons linking to the developer's application
+Basic meta descriptions for SEO
+
+2.4 Content Export
+
+HTML file generation for all blog posts
+Download package containing:
+
+Blog homepage (blog.html)
+Folder structure with empty "posts" directory for future content
+References to hosted CSS/JS files on our server
+
+
+
+3. User Journey
+
+Authentication & Project Creation
+
+Developer authenticates via Replit
+Creates a new project with basic information
+
+
+Website Analysis
+
+Developer uploads website's index.html and CSS files
+Developer provides a brief description of their site/application
+System analyzes files to understand:
+
+Design patterns, colors, typography, and layout
+Website purpose and business context
+
+
+System creates blog homepage and post templates that match the site's existing style
+Developer reviews and approves templates
+
+
+Blog Content Creation
+
+Developer selects "New Blog Post"
+Either inputs topic idea or pastes URL for inspiration
+System generates blog post content that:
+
+Matches the website's visual style
+References the website/product contextually
+Includes appropriate CTA with button to the developer's app
+
+
+Developer reviews, edits, and approves content
+
+
+Export & Integration
+
+System generates HTML files for:
+
+Individual blog posts
+Blog homepage
+
+
+System hosts CSS/JS files on server (ourdomain.com/cssstyles/[unique-filename].css)
+Developer downloads package with all necessary files and folder structure
+
+
+
+4. Technical Architecture Flow
+User Interface <--> Python Backend (Flask/Django) <--> Database (PostgreSQL)
+                             |
+                             v
+                       External Services
+                             |
+                             ├── Replit Auth Service
+                             ├── OpenAI API (Style analysis, content generation)
+                             └── File Storage (for hosted CSS/JS)
+Detailed Technical Flow:
+
+Authentication Flow:
+
+UI redirects to Replit Auth
+Replit Auth returns auth tokens
+Backend validates tokens
+Auth middleware protects routes
+
+
+Website Analysis Flow:
+
+UI uploads HTML/CSS → File storage
+Backend processes files:
+
+Extracts CSS properties and design elements
+Analyzes HTML structure and content
+Sends to OpenAI for deeper analysis
+
+
+Results stored in PostgreSQL
+Blog templates generated based on original site design
+CSS/JS files generated with unique filenames and stored on server
+
+
+Content Generation Flow:
+
+User inputs topic or URL → Backend processes
+Python backend prepares prompt including:
+
+Website description
+Blog topic
+Instructions to reference the website/product
+CTA requirements
+
+
+OpenAI returns blog content
+Backend formats content using site-matching templates
+Content stored in PostgreSQL
+
+
+Export Flow:
+
+Backend generates HTML files for posts and homepage
+Files reference hosted CSS/JS (ourdomain.com/cssstyles/[unique-filename].css)
+Files packaged into downloadable folder structure
+Download link provided to developer
+
+
+
+5. Technical Requirements
+5.1 Frontend
+
+Simple, clean UI built with HTML, CSS, JavaScript
+File upload component
+Text editor for content review/editing
+Preview functionality
+
+5.2 Backend
+
+Python (Flask or Django)
+PostgreSQL for data storage
+Replit authentication integration
+File storage system for:
+
+User-uploaded files (temporary)
+Generated CSS/JS files (permanent hosting)
+
+
+OpenAI API integration
+Simple web scraping capability
+HTML/CSS parsing and generation
+
+5.3 APIs
+
+Replit Auth API
+OpenAI API for content generation and site analysis
+Basic web scraping functionality
+
+5.4 Infrastructure
+
+Web server for hosting the application
+File server for CSS/JS hosting (simple file structure, not CDN)
+PostgreSQL database
+Backup solution
+
+6. Development Milestones
+Phase 1: Core Infrastructure
+
+Python backend setup
+Database schema design
+Replit authentication integration
+File upload/storage system
+
+Phase 2: Website Analysis
+
+HTML/CSS parser implementation
+OpenAI integration for site analysis
+Template generation system
+CSS/JS file hosting with unique naming
+
+Phase 3: Content Creation
+
+Blog topic input methods
+Website-contextual content generation
+CTA integration
+Post formatting within site-matching templates
+
+Phase 4: Export System
+
+HTML file generation
+Folder structure creation
+Download package implementation
+Testing with various website styles
+
+7. Technical Specifications
+7.1 File Storage Structure
+/hosted_files
+  /cssstyles
+    /[project_id]_[timestamp].css
+  /scripts
+    /[project_id]_[timestamp].js
+7.2 Export Package Structure
+blog/
+  blog.html
+  /posts
+    /post1.html
+    /post2.html
+  /assets
+    /images
+7.3 CSS/JS Reference Format
+html<link rel="stylesheet" href="https://ourdomain.com/cssstyles/[unique-filename].css">
+<script src="https://ourdomain.com/scripts/[unique-filename].js"></script>
+8. Security Considerations
+
+Secure storage of user website assets
+Sanitization of uploaded files
+Protection against XSS in generated HTML
+Proper authentication and authorization through Replit
+Unique file naming to prevent conflicts or overwriting
+
+9. Development Notes
+
+Focus on accurate style matching rather than complex features
+Ensure generated HTML is clean, valid, and compatible
+Prioritize the contextual relationship between blog content and the developer's website
+Ensure CTA buttons are prominent and effectively direct users to the developer's application
+Keep the system simple - we're generating files, not hosting or serving the actual blog
