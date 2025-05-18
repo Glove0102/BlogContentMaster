@@ -1,0 +1,327 @@
+{% extends 'layout.html' %}
+
+{% block title %}{{ project.name }} - Blog Content Generator{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Project Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ project.name }}</li>
+                </ol>
+            </nav>
+            <h1>{{ project.name }}</h1>
+            <p class="lead">{{ project.description }}</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            {% if project.html_file_path and project.blog_template_html %}
+            <a href="{{ url_for('create_post', project_id=project.id) }}" class="btn btn-primary me-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                New Blog Post
+            </a>
+            {% endif %}
+            <div class="dropdown d-inline-block">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="projectActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    Actions
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="projectActionsDropdown">
+                    {% if blog_posts %}
+                    <li><a class="dropdown-item" href="{{ url_for('export_project', project_id=project.id) }}">Export Blog Package</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    {% endif %}
+                    <li><a class="dropdown-item text-danger" href="#" id="delete-project">Delete Project</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Setup Website Section -->
+    <div class="card mb-4 {% if project.html_file_path %}border-success{% endif %}">
+        <div class="card-header {% if project.html_file_path %}bg-success text-white{% endif %}">
+            <h5 class="m-0">
+                {% if project.html_file_path %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                {% endif %}
+                Step 1: Website Analysis
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if not project.html_file_path %}
+            <form id="upload-form" action="{{ url_for('upload_files', project_id=project.id) }}" method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="website-purpose" class="form-label">Website Purpose</label>
+                    <textarea class="form-control" id="website-purpose" name="website_purpose" rows="3" placeholder="Describe your website's purpose, business context, and target audience" required></textarea>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="html-file" class="form-label">HTML File (index.html)</label>
+                        <div class="input-group">
+                            <input type="file" class="custom-file-input" id="html-file" name="html_file" accept=".html,.htm" required>
+                            <label class="custom-file-label form-control" for="html-file" data-default="Choose HTML file">Choose HTML file</label>
+                        </div>
+                        <small class="form-text text-muted">Upload your website's main HTML file</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="css-file" class="form-label">CSS File</label>
+                        <div class="input-group">
+                            <input type="file" class="custom-file-input" id="css-file" name="css_file" accept=".css" required>
+                            <label class="custom-file-label form-control" for="css-file" data-default="Choose CSS file">Choose CSS file</label>
+                        </div>
+                        <small class="form-text text-muted">Upload your website's main CSS file</small>
+                    </div>
+                </div>
+                
+                <button type="submit" id="upload-btn" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    Upload & Analyze
+                </button>
+            </form>
+            {% else %}
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Website Files</h6>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>HTML File</span>
+                            <span class="badge bg-success rounded-pill">Uploaded</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>CSS File</span>
+                            <span class="badge bg-success rounded-pill">Uploaded</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6>Website Purpose</h6>
+                    <p>{{ project.website_purpose }}</p>
+                </div>
+            </div>
+            
+            {% if project.style_analysis %}
+            <div class="mt-3">
+                <h6>Style Analysis</h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Colors</h6>
+                        <div class="d-flex flex-wrap">
+                            {% for color_name, color_value in project.style_analysis.colors.items() %}
+                            <div class="me-2 mb-2">
+                                <div style="width: 30px; height: 30px; background-color: {{ color_value }}; border-radius: 4px; border: 1px solid var(--bs-border-color);"></div>
+                                <small class="text-muted">{{ color_name }}</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Typography</h6>
+                        <p class="mb-1"><small><strong>Heading:</strong> {{ project.style_analysis.typography.headingFont }}</small></p>
+                        <p class="mb-1"><small><strong>Body:</strong> {{ project.style_analysis.typography.bodyFont }}</small></p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Business</h6>
+                        <p class="mb-1"><small><strong>Industry:</strong> {{ project.style_analysis.business.industry }}</small></p>
+                        <p class="mb-1"><small><strong>Audience:</strong> {{ project.style_analysis.business.audience }}</small></p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Blog Posts Section -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="m-0">Step 2: Blog Content</h5>
+            {% if project.html_file_path and project.blog_template_html %}
+            <a href="{{ url_for('create_post', project_id=project.id) }}" class="btn btn-sm btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                New Post
+            </a>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if not project.html_file_path %}
+            <div class="text-center py-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <h5 class="mt-3">Complete Step 1 First</h5>
+                <p class="text-muted">Upload your website files to analyze its style before creating blog content.</p>
+            </div>
+            {% elseif not blog_posts %}
+            <div class="text-center py-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                <h5 class="mt-3">No Blog Posts Yet</h5>
+                <p class="text-muted">Create your first blog post by clicking the "New Post" button above.</p>
+            </div>
+            {% else %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for post in blog_posts %}
+                        <tr>
+                            <td>{{ post.title }}</td>
+                            <td>{{ post.created_at.strftime('%b %d, %Y') }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('preview_post', post_id=post.id) }}" class="btn btn-outline-primary">Preview</a>
+                                    <a href="{{ url_for('edit_post', post_id=post.id) }}" class="btn btn-outline-secondary">Edit</a>
+                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deletePostModal{{ post.id }}">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Delete Post Modal -->
+                        <div class="modal fade" id="deletePostModal{{ post.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Delete Blog Post</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Are you sure you want to delete the blog post "<strong>{{ post.title }}</strong>"?</p>
+                                        <p class="text-danger">This action cannot be undone.</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <form action="{{ url_for('delete_post', post_id=post.id) }}" method="POST">
+                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Export Section -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="m-0">Step 3: Export</h5>
+            {% if blog_posts %}
+            <button id="export-button" class="btn btn-sm btn-success" data-project-id="{{ project.id }}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Export Blog Package
+            </button>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if not blog_posts %}
+            <div class="text-center py-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <h5 class="mt-3">Create Blog Posts First</h5>
+                <p class="text-muted">You need to create at least one blog post before exporting.</p>
+            </div>
+            {% else %}
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>What's Included</h6>
+                    <ul>
+                        <li>Blog homepage (blog.html)</li>
+                        <li>{{ blog_posts|length }} blog post HTML files</li>
+                        <li>References to hosted CSS/JS files</li>
+                        <li>Organized folder structure</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6>Next Steps</h6>
+                    <ol>
+                        <li>Download the ZIP package</li>
+                        <li>Extract files to your website directory</li>
+                        <li>Link to your blog from your main website</li>
+                    </ol>
+                    <button id="export-instructions-button" class="btn btn-sm btn-outline-secondary mt-2">
+                        View Integration Instructions
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Export Instructions Modal -->
+<div class="modal fade" id="export-instructions-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Integration Instructions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Download and Extract</h6>
+                <p>Extract the ZIP file you downloaded to your website directory. This will create a <code>blog</code> folder with all necessary files.</p>
+                
+                <h6>2. Link to Your Blog</h6>
+                <p>Add a link to your blog from your main website. Here's an example:</p>
+                <div class="code-snippet-container">
+                    <pre class="code-snippet"><code>&lt;a href="blog/blog.html"&gt;Visit Our Blog&lt;/a&gt;</code></pre>
+                    <button class="btn btn-sm btn-outline-secondary copy-snippet">Copy</button>
+                </div>
+                
+                <h6>3. CSS and JS Files</h6>
+                <p>The blog HTML files reference hosted CSS and JS files on our server:</p>
+                <div class="code-snippet-container">
+                    <pre class="code-snippet"><code>&lt;link rel="stylesheet" href="https://ourdomain.com/cssstyles/{{ project.hosted_css_filename }}"&gt;
+&lt;script src="https://ourdomain.com/scripts/{{ project.hosted_js_filename }}" defer&gt;&lt;/script&gt;</code></pre>
+                    <button class="btn btn-sm btn-outline-secondary copy-snippet">Copy</button>
+                </div>
+                <p>These files are already referenced in all the generated HTML files, so you don't need to add them manually.</p>
+                
+                <h6>4. Adding New Content</h6>
+                <p>To add new blog posts, come back to this dashboard and create more content. Then, export the package again to get the updated files.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/project.js') }}"></script>
+<script src="{{ url_for('static', filename='js/export.js') }}"></script>
+{% endblock %}

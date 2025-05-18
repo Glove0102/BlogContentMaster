@@ -1,0 +1,174 @@
+{% extends 'layout.html' %}
+
+{% block title %}Blog Content Generator - Create Blog Content Matching Your Website Style{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<header class="hero text-center">
+    <div class="container">
+        <h1 class="display-4 fw-bold">Generate Blog Content That Matches Your Website Style</h1>
+        <p class="lead mb-4">Create professional blog content that seamlessly integrates with your existing website design - perfect for developers who want content that looks like a native part of their site.</p>
+        <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mb-5">
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg px-4 me-sm-3">Go to Dashboard</a>
+            {% else %}
+            <a href="{{ url_for('replit_auth.login') }}" class="btn btn-primary btn-lg px-4 me-sm-3">Get Started</a>
+            {% endif %}
+            <a href="#features" class="btn btn-outline-light btn-lg px-4">Learn More</a>
+        </div>
+    </div>
+</header>
+
+<!-- Features Section -->
+<section class="py-5" id="features">
+    <div class="container">
+        <h2 class="text-center mb-5">Key Features</h2>
+        <div class="row g-4 py-3">
+            <div class="col-md-4">
+                <div class="feature-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                </div>
+                <h3>Website Style Analysis</h3>
+                <p>Upload your website's HTML and CSS files, and our system will analyze colors, typography, and layout to create a perfectly matching blog design.</p>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                </div>
+                <h3>AI-Powered Content</h3>
+                <p>Generate contextual blog content that references your website/product with custom calls-to-action that direct readers to your application.</p>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </div>
+                <h3>Simple Export</h3>
+                <p>Download a package containing your blog homepage and all posts with the correct folder structure, ready to integrate with your website.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-5 bg-body-tertiary">
+    <div class="container">
+        <h2 class="text-center mb-5">How It Works</h2>
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="timeline">
+                    <!-- Step 1 -->
+                    <div class="row mb-4">
+                        <div class="col-md-1 text-center">
+                            <div class="badge bg-primary rounded-circle p-3">1</div>
+                        </div>
+                        <div class="col-md-11">
+                            <h4>Upload Your Website Files</h4>
+                            <p>Upload your website's index.html and CSS files, along with a brief description of your site's purpose.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 2 -->
+                    <div class="row mb-4">
+                        <div class="col-md-1 text-center">
+                            <div class="badge bg-primary rounded-circle p-3">2</div>
+                        </div>
+                        <div class="col-md-11">
+                            <h4>AI Analyzes Your Style</h4>
+                            <p>Our system analyzes your files to understand design patterns, colors, typography, and your business context.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 3 -->
+                    <div class="row mb-4">
+                        <div class="col-md-1 text-center">
+                            <div class="badge bg-primary rounded-circle p-3">3</div>
+                        </div>
+                        <div class="col-md-11">
+                            <h4>Create Blog Content</h4>
+                            <p>Generate blog posts by entering topics or pasting URLs for inspiration. Our AI creates content that contextually references your website.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 4 -->
+                    <div class="row">
+                        <div class="col-md-1 text-center">
+                            <div class="badge bg-primary rounded-circle p-3">4</div>
+                        </div>
+                        <div class="col-md-11">
+                            <h4>Export & Integrate</h4>
+                            <p>Download your blog package with all HTML files and references to hosted CSS/JS files, ready to integrate with your site.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Examples Section -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Examples</h2>
+        <div class="row">
+            <div class="col-md-6 col-lg-3">
+                <div class="card example-card h-100">
+                    <img src="https://pixabay.com/get/ge8be37a37d5fc4b4f5f1c8f4b4418bd7f503fc6a0685fbe4f7bc746bfe6f21c3fe59de133a1fe19aa7ede051f0abebe39a7ea74ffe2fccc67e840fb33082f6c4_1280.jpg" class="card-img-top" alt="Developer Blog Example">
+                    <div class="card-body">
+                        <h5 class="card-title">Developer Blog</h5>
+                        <p class="card-text">Technical tutorials and coding insights generated to match a software development website.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card example-card h-100">
+                    <img src="https://pixabay.com/get/g837398b1b1c52875785919f90ea713b78376d216977d7e73aad032d0c4c4f927e3922c502fc97640d44366d9ee3a4e0e1da22ccce6f2115d98a7de9b89eb10a6_1280.jpg" alt="SaaS Blog Example" class="card-img-top">
+                    <div class="card-body">
+                        <h5 class="card-title">SaaS Blog</h5>
+                        <p class="card-text">Product-focused content for SaaS applications with custom CTAs directing to free trials.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card example-card h-100">
+                    <img src="https://pixabay.com/get/g05d570141199a371b9c6801b59f7a45fffe5133cb2bc791a8744d0e17371053a8cb21c6ba5bb2f63e4eb4a0cf806abf1984e4de8040418287f00d5b998267d2b_1280.jpg" alt="Portfolio Blog Example" class="card-img-top">
+                    <div class="card-body">
+                        <h5 class="card-title">Portfolio Blog</h5>
+                        <p class="card-text">Case studies and project showcases for a freelance developer's professional portfolio.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card example-card h-100">
+                    <img src="https://pixabay.com/get/gf1d50ba5462280301e4baad7f3035f7ccd0104bc172d7ac74e27dc725d3cb9bfe1b123173d1265331346a0fdc9ff187e4b03b29319e4c84a3f11ed27357af564_1280.jpg" alt="Tech News Blog Example" class="card-img-top">
+                    <div class="card-body">
+                        <h5 class="card-title">Tech News Blog</h5>
+                        <p class="card-text">Industry insights and technology news for a tech startup's knowledge base.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5 bg-primary text-white">
+    <div class="container text-center">
+        <h2 class="mb-4">Ready to create content that matches your website?</h2>
+        <p class="lead mb-4">Generate blog posts that look like they were designed specifically for your site.</p>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('dashboard') }}" class="btn btn-light btn-lg">Go to Dashboard</a>
+        {% else %}
+        <a href="{{ url_for('replit_auth.login') }}" class="btn btn-light btn-lg">Get Started Now</a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

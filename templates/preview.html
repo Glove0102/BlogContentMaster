@@ -1,0 +1,153 @@
+{% extends 'layout.html' %}
+
+{% block title %}Preview: {{ post.title }} - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('project_detail', project_id=project.id) }}">{{ project.name }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Preview</li>
+        </ol>
+    </nav>
+    
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Preview Blog Post</h1>
+            <p class="lead">See how your blog post will look on your website</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <div class="btn-group">
+                <a href="{{ url_for('edit_post', post_id=post.id) }}" class="btn btn-outline-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    Edit Post
+                </a>
+                <a href="{{ url_for('project_detail', project_id=project.id) }}" class="btn btn-outline-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    Back to Project
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="m-0">Post Details</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <p><strong>Title:</strong> {{ post.title }}</p>
+                    <p><strong>Created:</strong> {{ post.created_at.strftime('%B %d, %Y') }}</p>
+                    {% if post.meta_description %}
+                    <p><strong>Meta Description:</strong> {{ post.meta_description }}</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6>Preview Options</h6>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="fullPreviewToggle" checked>
+                                <label class="form-check-label" for="fullPreviewToggle">Show Full Page Preview</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="responsivePreviewToggle">
+                                <label class="form-check-label" for="responsivePreviewToggle">Mobile Preview</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs" id="previewTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="rendered-tab" data-bs-toggle="tab" data-bs-target="#rendered" type="button" role="tab" aria-controls="rendered" aria-selected="true">Rendered Preview</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="html-tab" data-bs-toggle="tab" data-bs-target="#html" type="button" role="tab" aria-controls="html" aria-selected="false">HTML Code</button>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content" id="previewTabsContent">
+                <div class="tab-pane fade show active" id="rendered" role="tabpanel" aria-labelledby="rendered-tab">
+                    <div id="preview-container" class="preview-container">
+                        <iframe id="preview-frame" class="preview-frame" srcdoc="{{ post.html_content|safe }}"></iframe>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="html" role="tabpanel" aria-labelledby="html-tab">
+                    <div class="code-snippet-container">
+                        <pre class="code-snippet"><code>{{ post.html_content|e }}</code></pre>
+                        <button class="btn btn-sm btn-outline-secondary copy-snippet">Copy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle full page preview
+    const fullPreviewToggle = document.getElementById('fullPreviewToggle');
+    const previewFrame = document.getElementById('preview-frame');
+    
+    if (fullPreviewToggle && previewFrame) {
+        fullPreviewToggle.addEventListener('change', function() {
+            if (this.checked) {
+                previewFrame.style.height = '600px';
+            } else {
+                previewFrame.style.height = '300px';
+            }
+        });
+    }
+    
+    // Toggle responsive preview
+    const responsivePreviewToggle = document.getElementById('responsivePreviewToggle');
+    
+    if (responsivePreviewToggle && previewFrame) {
+        responsivePreviewToggle.addEventListener('change', function() {
+            if (this.checked) {
+                previewFrame.style.width = '375px';
+                previewFrame.style.margin = '0 auto';
+                previewFrame.style.display = 'block';
+            } else {
+                previewFrame.style.width = '100%';
+                previewFrame.style.margin = '0';
+            }
+        });
+    }
+    
+    // Copy HTML code
+    const copyButton = document.querySelector('.copy-snippet');
+    if (copyButton) {
+        copyButton.addEventListener('click', function() {
+            const code = document.querySelector('.code-snippet code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = this.textContent;
+                this.textContent = 'Copied!';
+                setTimeout(() => {
+                    this.textContent = originalText;
+                }, 2000);
+            });
+        });
+    }
+});
+</script>
+{% endblock %}
