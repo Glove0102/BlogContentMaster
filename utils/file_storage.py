@@ -150,33 +150,64 @@ def create_download_package(project, blog_posts):
                 # Replace placeholder with actual post links
                 blog_html = blog_html.replace('<!-- BLOG_POSTS_PLACEHOLDER -->', post_links)
                 
+                # Fix the CSS and JS links to use local paths
+                blog_html = blog_html.replace(f'https://ourdomain.com/cssstyles/{project.hosted_css_filename}', 'assets/css/blog-styles.css')
+                if project.hosted_js_filename:
+                    blog_html = blog_html.replace(f'https://ourdomain.com/scripts/{project.hosted_js_filename}', 'assets/js/blog-scripts.js')
+                
                 # Add the file to the ZIP
                 zf.writestr('blog/blog.html', blog_html)
             
-            # Create posts directory
+            # Create posts directory and add blog posts
             if blog_posts:
                 # Add each blog post as an HTML file
                 for post in blog_posts:
                     post_html = post.html_content
+                    
+                    # Fix the CSS and JS links to use local paths
+                    post_html = post_html.replace(f'https://ourdomain.com/cssstyles/{project.hosted_css_filename}', '../assets/css/blog-styles.css')
+                    if project.hosted_js_filename:
+                        post_html = post_html.replace(f'https://ourdomain.com/scripts/{project.hosted_js_filename}', '../assets/js/blog-scripts.js')
+                        
                     zf.writestr(f'blog/posts/{post.id}.html', post_html)
             
-            # Create empty directories
+            # Create assets directories
             zf.writestr('blog/posts/.keep', '')
             zf.writestr('blog/assets/images/.keep', '')
+            
+            # Create css directory and add CSS file
+            css_content = ""
+            if project.hosted_css_filename:
+                css_path = os.path.join(app.config['HOSTED_FILES_FOLDER'], 'cssstyles', project.hosted_css_filename)
+                if os.path.exists(css_path):
+                    with open(css_path, 'r', encoding='utf-8') as css_file:
+                        css_content = css_file.read()
+            
+            zf.writestr('blog/assets/css/blog-styles.css', css_content)
+            
+            # Create js directory and add JS file
+            js_content = ""
+            if project.hosted_js_filename:
+                js_path = os.path.join(app.config['HOSTED_FILES_FOLDER'], 'scripts', project.hosted_js_filename)
+                if os.path.exists(js_path):
+                    with open(js_path, 'r', encoding='utf-8') as js_file:
+                        js_content = js_file.read()
+            
+            zf.writestr('blog/assets/js/blog-scripts.js', js_content)
             
             # Add a README file
             readme_content = f"""# {project.name} Blog
 
-This package contains a blog for your website. Here's how to use it:
+This package contains a complete blog for your website. Here's how to use it:
 
 1. Upload the entire 'blog' folder to your website
 2. The main blog page is at 'blog/blog.html'
 3. Individual blog posts are in the 'blog/posts/' directory
-4. The CSS and JS files are hosted at:
-   - CSS: https://ourdomain.com/cssstyles/{project.hosted_css_filename}
-   - JS: https://ourdomain.com/scripts/{project.hosted_js_filename}
+4. The CSS and JS files are included in the assets folder:
+   - CSS: blog/assets/css/blog-styles.css
+   - JS: blog/assets/js/blog-scripts.js
 
-These files are already referenced in the HTML files.
+All files are already properly linked in the HTML files.
 
 Enjoy your new blog!
 """

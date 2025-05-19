@@ -31,8 +31,8 @@ def generate_blog_template(analysis_result, css_filename, js_filename):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{business.get('name', 'Blog')} - Blog</title>
     <meta name="description" content="The official blog for {business.get('name', 'our website')}">
-    <link rel="stylesheet" href="https://ourdomain.com/cssstyles/{css_filename}">
-    <script src="https://ourdomain.com/scripts/{js_filename}" defer></script>
+    <link rel="stylesheet" href="assets/css/blog-styles.css">
+    <script src="assets/js/blog-scripts.js" defer></script>
 </head>
 <body>
     <header class="blog-header">
@@ -80,8 +80,8 @@ def generate_blog_template(analysis_result, css_filename, js_filename):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog</title>
     <meta name="description" content="Our Blog">
-    <link rel="stylesheet" href="https://ourdomain.com/cssstyles/{css_filename}">
-    <script src="https://ourdomain.com/scripts/{js_filename}" defer></script>
+    <link rel="stylesheet" href="assets/css/blog-styles.css">
+    <script src="assets/js/blog-scripts.js" defer></script>
 </head>
 <body>
     <header>
@@ -143,8 +143,8 @@ def generate_post_template(analysis_result, css_filename, js_filename):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{POST_TITLE}} - {business.get('name', 'Blog')}</title>
     <meta name="description" content="{{POST_META_DESCRIPTION}}">
-    <link rel="stylesheet" href="https://ourdomain.com/cssstyles/{css_filename}">
-    <script src="https://ourdomain.com/scripts/{js_filename}" defer></script>
+    <link rel="stylesheet" href="../assets/css/blog-styles.css">
+    <script src="../assets/js/blog-scripts.js" defer></script>
 </head>
 <body>
     <header class="blog-header">
