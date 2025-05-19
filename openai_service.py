@@ -155,6 +155,95 @@ def analyze_website_content(html_path, css_path, website_purpose):
             }
         }
 
+def generate_blog_title(topic=None, inspiration_url=None, website_info=None):
+    """
+    Generate a title for a blog post using OpenAI.
+    
+    Args:
+        topic: Optional topic description
+        inspiration_url: Optional URL to scrape for inspiration
+        website_info: Information about the website's purpose
+        
+    Returns:
+        A string containing the generated title
+    """
+    try:
+        # Prepare context from topic or inspiration URL
+        context = ""
+        
+        # If we have a topic, use that
+        if topic:
+            context = f"Topic to write about: {topic}"
+        # If we have an inspiration URL, scrape it
+        elif inspiration_url:
+            try:
+                response = requests.get(inspiration_url, timeout=10)
+                if response.status_code == 200:
+                    soup = BeautifulSoup(response.text, 'html.parser')
+                    
+                    # Remove script and style elements
+                    for script in soup(["script", "style"]):
+                        script.extract()
+                    
+                    # Get text from the page
+                    page_text = soup.get_text()
+                    
+                    # Clean up text
+                    lines = (line.strip() for line in page_text.splitlines())
+                    chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+                    page_text = '\n'.join(chunk for chunk in chunks if chunk)
+                    
+                    # Trim to a reasonable length
+                    context = f"Inspiration URL content: {page_text[:3000]}"
+                else:
+                    context = f"Unable to fetch content from URL: {inspiration_url}"
+            except Exception as e:
+                logging.error(f"Error fetching URL: {str(e)}")
+                context = f"Unable to fetch content from URL: {inspiration_url}"
+        
+        # Create a prompt for the OpenAI API
+        prompt = f"""
+        Generate an engaging, compelling, and SEO-friendly title for a blog post on the following:
+        
+        CONTEXT INFORMATION:
+        {context}
+        
+        WEBSITE INFORMATION:
+        {website_info or "Unknown website"}
+        
+        The title should be:
+        1. Attention-grabbing and engaging
+        2. Clear and descriptive of the content
+        3. Optimized for search engines
+        4. Between 50-70 characters (ideal for SEO)
+        5. Relevant to the website's industry and audience
+        
+        Return only the title text, nothing else.
+        """
+        
+        # Call OpenAI API
+        response = openai.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are a professional blog title generator with expertise in SEO and content marketing."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=50
+        )
+        
+        # Safely get the content from the response
+        if response.choices and hasattr(response.choices[0], 'message') and response.choices[0].message and response.choices[0].message.content:
+            title = response.choices[0].message.content.strip()
+            # Remove any quotes that might be in the response
+            title = title.replace('"', '').replace("'", '').strip()
+            return title
+        
+        return "Blog Post" # Fallback title
+    
+    except Exception as e:
+        logging.error(f"Error generating blog title: {str(e)}")
+        return "Blog Post"
+
 def generate_blog_content(title, topic=None, content=None, inspiration_url=None, website_info=None, style_analysis=None):
     """
     Generate blog post content using OpenAI.
@@ -245,13 +334,29 @@ def generate_blog_content(title, topic=None, content=None, inspiration_url=None,
         if response.choices and hasattr(response.choices[0], 'message') and response.choices[0].message and response.choices[0].message.content:
             blog_content = response.choices[0].message.content
         
-        # Generate a meta description
-        meta_description_prompt = f"Generate a concise, SEO-friendly meta description (max 160 characters) for this blog post about '{title}'."
+        # Generate a comprehensive meta description
+        meta_description_prompt = f"""
+        Generate an SEO-friendly meta description for this blog post.
+        
+        BLOG TITLE: '{title}'
+        
+        BLOG CONTENT SUMMARY:
+        {blog_content[:500]}
+        
+        Requirements:
+        1. Must be EXACTLY 150-160 characters (maximize character usage within this range)
+        2. Include relevant keywords from the title and content
+        3. Be compelling and promote click-through
+        4. Accurately summarize the content's value proposition
+        5. Include a call-to-action if possible
+        
+        Return ONLY the meta description text. No quotes, no explanations.
+        """
         
         meta_response = openai.chat.completions.create(
             model="gpt-4o",
             messages=[
-                {"role": "system", "content": "You are an SEO specialist creating meta descriptions."},
+                {"role": "system", "content": "You are an SEO specialist creating meta descriptions. You must generate descriptions that use between 150-160 characters."},
                 {"role": "user", "content": meta_description_prompt}
             ],
             max_tokens=100
@@ -263,6 +368,10 @@ def generate_blog_content(title, topic=None, content=None, inspiration_url=None,
             content = meta_response.choices[0].message.content
             if content:
                 meta_description = content.strip()
+                
+        # Ensure the meta description doesn't exceed 160 characters
+        if len(meta_description) > 160:
+            meta_description = meta_description[:157] + '...'
         
         # Format HTML content based on the post template
         formatted_html = format_blog_html(title, blog_content, style_analysis)

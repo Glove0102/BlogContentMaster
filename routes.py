@@ -160,9 +160,21 @@ def create_post(project_id):
         topic_input = request.form.get('topic_input')
         inspiration_url = request.form.get('inspiration_url')
         
-        if not title or (not topic_input and not inspiration_url):
-            flash('Title and either topic or URL inspiration are required', 'danger')
+        # Require either topic or URL inspiration
+        if not topic_input and not inspiration_url:
+            flash('Please provide either a topic or URL inspiration to generate content', 'danger')
             return redirect(url_for('create_post', project_id=project_id))
+        
+        # If no title is provided, generate one based on topic or URL
+        if not title:
+            # First, attempt to generate a title
+            from openai_service import generate_blog_title
+            generated_title = generate_blog_title(
+                topic=topic_input,
+                inspiration_url=inspiration_url,
+                website_info=project.website_purpose
+            )
+            title = generated_title
         
         # Generate blog post content
         content_result = generate_blog_content(
@@ -239,6 +251,46 @@ def delete_post(post_id):
     
     flash('Blog post deleted successfully!', 'success')
     return redirect(url_for('project_detail', project_id=project.id))
+
+# Edit blog CSS
+@app.route('/projects/<int:project_id>/edit-css', methods=['GET', 'POST'])
+@require_login
+def edit_blog_css(project_id):
+    project = Project.query.filter_by(id=project_id, user_id=current_user.id).first_or_404()
+    
+    # Make sure the project has a CSS file
+    if not project.hosted_css_filename:
+        flash('No CSS file found for this project', 'danger')
+        return redirect(url_for('project_detail', project_id=project_id))
+    
+    # Get the path to the CSS file
+    css_path = os.path.join(app.config['HOSTED_FILES_FOLDER'], 'cssstyles', project.hosted_css_filename)
+    
+    if request.method == 'POST':
+        # Get the updated CSS content
+        css_content = request.form.get('css_content')
+        
+        # Save the updated CSS content
+        try:
+            with open(css_path, 'w', encoding='utf-8') as f:
+                f.write(css_content)
+            
+            flash('CSS file updated successfully', 'success')
+            return redirect(url_for('project_detail', project_id=project_id))
+        except Exception as e:
+            logging.error(f"Error saving CSS file: {str(e)}")
+            flash('Error saving CSS file', 'danger')
+    
+    # Read the current CSS content for the form
+    css_content = ""
+    try:
+        with open(css_path, 'r', encoding='utf-8') as f:
+            css_content = f.read()
+    except Exception as e:
+        logging.error(f"Error reading CSS file: {str(e)}")
+        flash('Error reading CSS file', 'danger')
+    
+    return render_template('edit_css.html', project=project, css_content=css_content)
 
 # Export blog package
 @app.route('/projects/<int:project_id>/export')
