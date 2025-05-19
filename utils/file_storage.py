@@ -81,6 +81,36 @@ def save_hosted_file(content, filename, file_type):
         
         # Save the file
         with open(file_path, 'w', encoding='utf-8') as f:
+
+def copy_css_to_hosted(css_file_path, hosted_css_filename):
+    """
+    Copy a CSS file from uploads to the hosted_files/cssstyles directory.
+    
+    Args:
+        css_file_path: The path to the source CSS file
+        hosted_css_filename: The filename for the hosted CSS file
+        
+    Returns:
+        The full path to the hosted CSS file
+    """
+    try:
+        # Create the full path for the hosted CSS file
+        hosted_css_path = os.path.join(app.config['HOSTED_FILES_FOLDER'], 'cssstyles', hosted_css_filename)
+        
+        # Read the original CSS file
+        with open(css_file_path, 'r', encoding='utf-8') as source_file:
+            css_content = source_file.read()
+        
+        # Write to the hosted CSS file
+        with open(hosted_css_path, 'w', encoding='utf-8') as dest_file:
+            dest_file.write(css_content)
+        
+        return hosted_css_path
+    
+    except Exception as e:
+        logging.error(f"Error copying CSS to hosted directory: {str(e)}")
+        raise e
+
             f.write(content)
         
         # Return the URL

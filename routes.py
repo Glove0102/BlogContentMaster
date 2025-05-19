@@ -116,6 +116,10 @@ def upload_files(project_id):
     project.hosted_css_filename = css_filename
     project.hosted_js_filename = js_filename
     
+    # Copy CSS file to hosted directory
+    from utils.file_storage import copy_css_to_hosted
+    hosted_css_path = copy_css_to_hosted(css_path, css_filename)
+    
     # Merge analysis results
     project.style_analysis = {
         **analysis_result,
