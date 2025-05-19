@@ -1,3 +1,4 @@
+
 import os
 import io
 import uuid
@@ -6,7 +7,7 @@ import zipfile
 import logging
 from werkzeug.utils import secure_filename
 from app import app
-from flask import url_for
+from flask import url_for, request
 
 def save_uploaded_file(file, file_type):
     """
@@ -81,6 +82,14 @@ def save_hosted_file(content, filename, file_type):
         
         # Save the file
         with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        
+        # Return the URL
+        return f"https://{request.host}/hosted_files/{folder}/{filename}"
+    
+    except Exception as e:
+        logging.error(f"Error saving hosted file: {str(e)}")
+        raise e
 
 def copy_css_to_hosted(css_file_path, hosted_css_filename):
     """
@@ -109,15 +118,6 @@ def copy_css_to_hosted(css_file_path, hosted_css_filename):
     
     except Exception as e:
         logging.error(f"Error copying CSS to hosted directory: {str(e)}")
-        raise e
-
-            f.write(content)
-        
-        # Return the URL
-        return f"https://{request.host}/hosted_files/{folder}/{filename}"
-    
-    except Exception as e:
-        logging.error(f"Error saving hosted file: {str(e)}")
         raise e
 
 def create_download_package(project, blog_posts):
