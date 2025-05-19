@@ -24,8 +24,8 @@
         <div class="card-body">
             <form id="content-form" action="{% if edit_mode %}{{ url_for('edit_post', post_id=post.id) }}{% else %}{{ url_for('create_post', project_id=project.id) }}{% endif %}" method="POST">
                 <div class="mb-4">
-                    <label for="title" class="form-label">Blog Post Title</label>
-                    <input type="text" class="form-control" id="title" name="title" placeholder="Enter a compelling title" value="{{ post.title if post else '' }}" required>
+                    <label for="title" class="form-label">Blog Post Title <small class="text-muted">(Optional - AI will generate if empty)</small></label>
+                    <input type="text" class="form-control" id="title" name="title" placeholder="Enter a compelling title or leave empty for AI generation" value="{{ post.title if post else '' }}">
                 </div>
                 
                 {% if not edit_mode %}

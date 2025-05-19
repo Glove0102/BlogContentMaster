@@ -9,12 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to validate form before submission
     if (contentForm) {
         contentForm.addEventListener('submit', function(e) {
-            // Check if title is provided
-            if (!titleInput.value.trim()) {
-                e.preventDefault();
-                showValidationError(titleInput, 'Please enter a title for your blog post');
-                return false;
-            }
+            // Title is now optional - AI will generate if not provided
             
             // Check if either topic or URL is provided
             if (!topicInput.value.trim() && !inspirationUrl.value.trim()) {
