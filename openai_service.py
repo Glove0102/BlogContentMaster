@@ -217,6 +217,10 @@ def generate_blog_title(topic=None, inspiration_url=None, website_info=None):
         3. Optimized for search engines
         4. Between 50-70 characters (ideal for SEO)
         5. Relevant to the website's industry and audience
+        6. IMPORTANT: Be extremely precise about project names, business names, and URLs
+           - Do not add extra letters or characters to names (e.g., 'Battle Stonks' not 'Battles Stonks')
+           - Do not modify domain names or add TLDs if not provided
+           - Preserve exact capitalization and spelling of all proper nouns
         
         Return only the title text, nothing else.
         """
@@ -316,8 +320,13 @@ def generate_blog_content(title, topic=None, content=None, inspiration_url=None,
         5. Make it SEO-friendly
         6. Keep the content factually accurate
         7. Aim for approximately 800-1000 words
+        8. IMPORTANT: Be extremely precise about project names, business names, and URLs
+           - Do not add extra letters or characters to names
+           - Do not modify domain names or add TLDs if not provided
+           - Preserve exact capitalization and spelling of all proper nouns
         
-        The blog post should feel like a natural part of the website.
+        The blog post should feel like a natural part of the website and maintain absolute accuracy
+        with respect to any business names, project names, and domain references.
         """
         
         # Call OpenAI API
@@ -349,6 +358,10 @@ def generate_blog_content(title, topic=None, content=None, inspiration_url=None,
         3. Be compelling and promote click-through
         4. Accurately summarize the content's value proposition
         5. Include a call-to-action if possible
+        6. CRITICAL: Maintain perfect accuracy with all proper nouns, business names, and project names
+           - Do not add extra letters or characters to names (e.g., 'Battle Stonks' not 'Battles Stonks')
+           - Do not modify domain names or add TLDs if not provided
+           - Preserve exact capitalization and spelling of all proper nouns
         
         Return ONLY the meta description text. No quotes, no explanations.
         """
