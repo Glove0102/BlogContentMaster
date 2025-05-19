@@ -303,7 +303,7 @@ def generate_post_template(analysis_result, css_filename, js_filename):
     <script src="../assets/js/blog-scripts.js" defer></script>
     <style>
         /* Inline styles to enhance the connection to the original website */
-        :root {
+        :root {{
             --primary-color: {colors.get('primary', '#007bff')};
             --secondary-color: {colors.get('secondary', '#6c757d')};
             --background-color: {colors.get('background', '#ffffff')};
@@ -313,7 +313,7 @@ def generate_post_template(analysis_result, css_filename, js_filename):
             --body-font: {typography.get('bodyFont', 'sans-serif')};
             --container-width: {layout.get('containerWidth', '1200px')};
             --spacing: {layout.get('spacing', '1rem')};
-        }
+        }}
         
         body {{
             font-family: var(--body-font);
