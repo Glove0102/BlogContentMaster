@@ -2,6 +2,7 @@ import os
 import json
 import uuid
 import time
+import logging
 from datetime import datetime
 from flask import render_template, request, redirect, url_for, session, flash, jsonify, send_file
 from flask_login import current_user
@@ -272,6 +273,10 @@ def edit_blog_css(project_id):
         
         # Save the updated CSS content
         try:
+            # Ensure css_content is not None
+            if css_content is None:
+                css_content = ""
+                
             with open(css_path, 'w', encoding='utf-8') as f:
                 f.write(css_content)
             
