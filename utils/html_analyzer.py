@@ -77,13 +77,19 @@ def analyze_html_css(html_path, css_path):
 
 def extract_colors(css_content):
     """Extract color values from CSS content."""
-    # Find all color values in the CSS
-    color_pattern = r'(?:color|background|background-color|border-color|fill|stroke)\s*:\s*(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)|hsla?\([^)]+\)|[a-zA-Z]+)'
-    color_matches = re.findall(color_pattern, css_content)
+    # Find all color values in the CSS with their selector context
+    color_pattern = r'([^{]*){[^}]*(?:color|background|background-color|border-color|fill|stroke)\s*:\s*(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)|hsla?\([^)]+\)|[a-zA-Z]+)[^}]*}'
+    context_color_matches = re.findall(color_pattern, css_content)
+    
+    # Extract just the colors for frequency counting
+    color_matches = []
+    for _, props in context_color_matches:
+        colors = re.findall(r'(?:color|background|background-color|border-color|fill|stroke)\s*:\s*(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)|hsla?\([^)]+\)|[a-zA-Z]+)', props)
+        color_matches.extend(colors)
     
     # Count occurrences of each color
     color_counter = Counter(color_matches)
-    most_common_colors = color_counter.most_common(10)
+    most_common_colors = color_counter.most_common(15)  # Increased from 10 to 15
     
     # Assign roles to colors based on their frequency and context
     primary_color = most_common_colors[0][0] if most_common_colors else "#007bff"
@@ -93,22 +99,63 @@ def extract_colors(css_content):
     accent_color = most_common_colors[2][0] if len(most_common_colors) > 2 else "#17a2b8"
     
     # Try to identify background and text colors
-    bg_pattern = r'(?:body|html|:root|\.main|\.container)\s*{[^}]*background(?:-color)?\s*:\s*([^;]+)'
+    bg_pattern = r'(?:body|html|:root|\.main|\.container|main|#main)\s*{[^}]*background(?:-color)?\s*:\s*([^;]+)'
     bg_match = re.search(bg_pattern, css_content)
     if bg_match:
         background_color = bg_match.group(1).strip()
     
-    text_pattern = r'(?:body|html|:root|\.main|\.container)\s*{[^}]*color\s*:\s*([^;]+)'
+    text_pattern = r'(?:body|html|:root|\.main|\.container|main|#main)\s*{[^}]*color\s*:\s*([^;]+)'
     text_match = re.search(text_pattern, css_content)
     if text_match:
         text_color = text_match.group(1).strip()
+    
+    # Look for button colors
+    button_color = None
+    button_pattern = r'(?:\.btn|button|\.button|input\[type="submit"\])\s*{[^}]*background(?:-color)?\s*:\s*([^;]+)'
+    button_match = re.search(button_pattern, css_content)
+    if button_match:
+        button_color = button_match.group(1).strip()
+    
+    # Look for link colors
+    link_color = None
+    link_pattern = r'a\s*{[^}]*color\s*:\s*([^;]+)'
+    link_match = re.search(link_pattern, css_content)
+    if link_match:
+        link_color = link_match.group(1).strip()
+    
+    # Look for heading colors
+    heading_color = None
+    heading_pattern = r'(?:h1|h2|h3|\.heading)\s*{[^}]*color\s*:\s*([^;]+)'
+    heading_match = re.search(heading_pattern, css_content)
+    if heading_match:
+        heading_color = heading_match.group(1).strip()
+    
+    # Look for border colors
+    border_color = None
+    border_pattern = r'{[^}]*border(?:-color)?\s*:\s*([^;]+)}'
+    border_matches = re.findall(border_pattern, css_content)
+    if border_matches:
+        # Try to extract just the color part from border properties
+        for border in border_matches:
+            color_match = re.search(r'(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)|hsla?\([^)]+\)|[a-zA-Z]+)', border)
+            if color_match:
+                border_color = color_match.group(1)
+                break
+    
+    # Build a color palette from all the identified colors
+    color_palette = [color for color, _ in most_common_colors]
     
     return {
         "primary": primary_color,
         "secondary": secondary_color,
         "background": background_color,
         "text": text_color,
-        "accent": accent_color
+        "accent": accent_color,
+        "button": button_color or primary_color,
+        "link": link_color or primary_color,
+        "heading": heading_color or primary_color,
+        "border": border_color or "#dee2e6",
+        "palette": color_palette
     }
 
 def extract_typography(css_content):
@@ -120,6 +167,18 @@ def extract_typography(css_content):
     h2_size = "1.75rem"
     h3_size = "1.5rem"
     body_size = "1rem"
+    
+    # Font weights
+    heading_weight = "bold"
+    body_weight = "normal"
+    
+    # Line heights
+    heading_line_height = "1.2"
+    body_line_height = "1.6"
+    
+    # Font styles
+    heading_style = "normal"
+    body_style = "normal"
     
     # Try to find font-family for headings
     heading_font_pattern = r'(?:h1|h2|h3|h4|h5|\.heading)\s*{[^}]*font-family\s*:\s*([^;]+)'
@@ -136,23 +195,63 @@ def extract_typography(css_content):
     # Try to find font sizes
     h1_size_pattern = r'h1\s*{[^}]*font-size\s*:\s*([^;]+)'
     h1_match = re.search(h1_size_pattern, css_content)
-    if h1_match:
+    if h1_match and h1_match.group(1):
         h1_size = h1_match.group(1).strip()
     
     h2_size_pattern = r'h2\s*{[^}]*font-size\s*:\s*([^;]+)'
     h2_match = re.search(h2_size_pattern, css_content)
-    if h2_match:
+    if h2_match and h2_match.group(1):
         h2_size = h2_match.group(1).strip()
     
     h3_size_pattern = r'h3\s*{[^}]*font-size\s*:\s*([^;]+)'
     h3_match = re.search(h3_size_pattern, css_content)
-    if h3_match:
+    if h3_match and h3_match.group(1):
         h3_size = h3_match.group(1).strip()
     
     body_size_pattern = r'(?:body|html|p)\s*{[^}]*font-size\s*:\s*([^;]+)'
     body_match = re.search(body_size_pattern, css_content)
-    if body_match:
+    if body_match and body_match.group(1):
         body_size = body_match.group(1).strip()
+    
+    # Try to find font weights
+    heading_weight_pattern = r'(?:h1|h2|h3|\.heading)\s*{[^}]*font-weight\s*:\s*([^;]+)'
+    heading_weight_match = re.search(heading_weight_pattern, css_content)
+    if heading_weight_match and heading_weight_match.group(1):
+        heading_weight = heading_weight_match.group(1).strip()
+    
+    body_weight_pattern = r'(?:body|html|p)\s*{[^}]*font-weight\s*:\s*([^;]+)'
+    body_weight_match = re.search(body_weight_pattern, css_content)
+    if body_weight_match and body_weight_match.group(1):
+        body_weight = body_weight_match.group(1).strip()
+    
+    # Try to find line heights
+    heading_line_height_pattern = r'(?:h1|h2|h3|\.heading)\s*{[^}]*line-height\s*:\s*([^;]+)'
+    heading_line_height_match = re.search(heading_line_height_pattern, css_content)
+    if heading_line_height_match and heading_line_height_match.group(1):
+        heading_line_height = heading_line_height_match.group(1).strip()
+    
+    body_line_height_pattern = r'(?:body|html|p)\s*{[^}]*line-height\s*:\s*([^;]+)'
+    body_line_height_match = re.search(body_line_height_pattern, css_content)
+    if body_line_height_match and body_line_height_match.group(1):
+        body_line_height = body_line_height_match.group(1).strip()
+    
+    # Try to find font styles
+    heading_style_pattern = r'(?:h1|h2|h3|\.heading)\s*{[^}]*font-style\s*:\s*([^;]+)'
+    heading_style_match = re.search(heading_style_pattern, css_content)
+    if heading_style_match and heading_style_match.group(1):
+        heading_style = heading_style_match.group(1).strip()
+    
+    body_style_pattern = r'(?:body|html|p)\s*{[^}]*font-style\s*:\s*([^;]+)'
+    body_style_match = re.search(body_style_pattern, css_content)
+    if body_style_match and body_style_match.group(1):
+        body_style = body_style_match.group(1).strip()
+    
+    # Try to find paragraph spacing and margins
+    paragraph_spacing = "1rem"
+    p_margin_pattern = r'p\s*{[^}]*margin-bottom\s*:\s*([^;]+)'
+    p_margin_match = re.search(p_margin_pattern, css_content)
+    if p_margin_match and p_margin_match.group(1):
+        paragraph_spacing = p_margin_match.group(1).strip()
     
     return {
         "headingFont": heading_font,
@@ -162,7 +261,14 @@ def extract_typography(css_content):
             "h2": h2_size,
             "h3": h3_size
         },
-        "bodySize": body_size
+        "bodySize": body_size,
+        "headingWeight": heading_weight,
+        "bodyWeight": body_weight,
+        "headingLineHeight": heading_line_height,
+        "bodyLineHeight": body_line_height,
+        "headingStyle": heading_style,
+        "bodyStyle": body_style,
+        "paragraphSpacing": paragraph_spacing
     }
 
 def extract_layout(soup, css_content):
