@@ -183,13 +183,13 @@ def extract_typography(css_content):
     # Try to find font-family for headings
     heading_font_pattern = r'(?:h1|h2|h3|h4|h5|\.heading)\s*{[^}]*font-family\s*:\s*([^;]+)'
     heading_font_match = re.search(heading_font_pattern, css_content)
-    if heading_font_match:
+    if heading_font_match and heading_font_match.group(1):
         heading_font = heading_font_match.group(1).strip().strip("'\"")
     
     # Try to find font-family for body
     body_font_pattern = r'(?:body|html|p|:root)\s*{[^}]*font-family\s*:\s*([^;]+)'
     body_font_match = re.search(body_font_pattern, css_content)
-    if body_font_match:
+    if body_font_match and body_font_match.group(1):
         body_font = body_font_match.group(1).strip().strip("'\"")
     
     # Try to find font sizes
@@ -279,17 +279,50 @@ def extract_layout(soup, css_content):
     header_style = "Simple header with logo and navigation"
     footer_style = "Basic footer with copyright information"
     
+    # Additional layout properties
+    content_padding = "15px"
+    section_margin = "2rem"
+    border_radius = "4px"
+    box_shadow = "0 2px 4px rgba(0,0,0,0.05)"
+    
     # Try to find container width
     container_pattern = r'(?:\.container|\.wrapper|\.content|main|#main)\s*{[^}]*(?:max-)?width\s*:\s*([^;]+)'
     container_match = re.search(container_pattern, css_content)
-    if container_match:
+    if container_match and container_match.group(1):
         container_width = container_match.group(1).strip()
     
     # Try to find spacing
     spacing_pattern = r'(?:\.container|\.wrapper|\.content|body|:root)\s*{[^}]*(?:padding|margin)\s*:\s*([^;]+)'
     spacing_match = re.search(spacing_pattern, css_content)
-    if spacing_match:
+    if spacing_match and spacing_match.group(1):
         spacing = spacing_match.group(1).strip()
+    
+    # Try to find content padding
+    padding_pattern = r'(?:\.content|main|article|section|\.main)\s*{[^}]*padding\s*:\s*([^;]+)'
+    padding_match = re.search(padding_pattern, css_content)
+    if padding_match and padding_match.group(1):
+        content_padding = padding_match.group(1).strip()
+    
+    # Try to find section margins
+    section_margin_pattern = r'(?:section|article|\.section)\s*{[^}]*margin-(?:bottom|top)\s*:\s*([^;]+)'
+    section_margin_match = re.search(section_margin_pattern, css_content)
+    if section_margin_match and section_margin_match.group(1):
+        section_margin = section_margin_match.group(1).strip()
+    
+    # Try to find border-radius style
+    radius_pattern = r'{[^}]*border-radius\s*:\s*([^;]+)}'
+    radius_matches = re.findall(radius_pattern, css_content)
+    if radius_matches:
+        # Use the most common non-zero radius
+        radius_values = [r.strip() for r in radius_matches if r.strip() != '0' and r.strip() != '0px']
+        if radius_values:
+            border_radius = radius_values[0]
+    
+    # Try to find box-shadow style
+    shadow_pattern = r'{[^}]*box-shadow\s*:\s*([^;]+)}'
+    shadow_matches = re.findall(shadow_pattern, css_content)
+    if shadow_matches:
+        box_shadow = shadow_matches[0].strip()
     
     # Analyze header
     header = soup.find('header')
@@ -303,6 +336,20 @@ def extract_layout(soup, css_content):
             header_style = "Simple header with logo"
         elif nav:
             header_style = "Header with navigation menu"
+    
+    # Extract header background color
+    header_bg_color = None
+    header_bg_pattern = r'(?:header|\.header|\.site-header)\s*{[^}]*background(?:-color)?\s*:\s*([^;]+)'
+    header_bg_match = re.search(header_bg_pattern, css_content)
+    if header_bg_match and header_bg_match.group(1):
+        header_bg_color = header_bg_match.group(1).strip()
+    
+    # Extract header text color
+    header_text_color = None
+    header_text_pattern = r'(?:header|\.header|\.site-header)\s*{[^}]*color\s*:\s*([^;]+)'
+    header_text_match = re.search(header_text_pattern, css_content)
+    if header_text_match and header_text_match.group(1):
+        header_text_color = header_text_match.group(1).strip()
     
     # Analyze footer
     footer = soup.find('footer')
@@ -318,11 +365,33 @@ def extract_layout(soup, css_content):
         elif has_copyright:
             footer_style = "Simple footer with copyright"
     
+    # Extract footer background color
+    footer_bg_color = None
+    footer_bg_pattern = r'(?:footer|\.footer|\.site-footer)\s*{[^}]*background(?:-color)?\s*:\s*([^;]+)'
+    footer_bg_match = re.search(footer_bg_pattern, css_content)
+    if footer_bg_match and footer_bg_match.group(1):
+        footer_bg_color = footer_bg_match.group(1).strip()
+    
+    # Extract footer text color
+    footer_text_color = None
+    footer_text_pattern = r'(?:footer|\.footer|\.site-footer)\s*{[^}]*color\s*:\s*([^;]+)'
+    footer_text_match = re.search(footer_text_pattern, css_content)
+    if footer_text_match and footer_text_match.group(1):
+        footer_text_color = footer_text_match.group(1).strip()
+    
     return {
         "containerWidth": container_width,
         "spacing": spacing,
         "headerStyle": header_style,
-        "footerStyle": footer_style
+        "footerStyle": footer_style,
+        "contentPadding": content_padding,
+        "sectionMargin": section_margin,
+        "borderRadius": border_radius,
+        "boxShadow": box_shadow,
+        "headerBgColor": header_bg_color,
+        "headerTextColor": header_text_color,
+        "footerBgColor": footer_bg_color,
+        "footerTextColor": footer_text_color
     }
 
 def extract_components(soup, css_content):
@@ -332,24 +401,65 @@ def extract_components(soup, css_content):
     link_style = "Underlined links with color change on hover"
     card_style = "Simple bordered cards with padding"
     
+    # Additional component properties
+    button_radius = "4px"
+    button_padding = "0.5rem 1rem"
+    button_bg = "#007bff"
+    button_color = "#ffffff"
+    button_hover_bg = "#0069d9"
+    
+    link_decoration = "none"
+    link_hover_decoration = "underline"
+    link_color = "#007bff"
+    link_hover_color = "#0056b3"
+    
+    card_padding = "1rem"
+    card_margin = "1rem 0"
+    card_border = "1px solid #dee2e6"
+    card_radius = "4px"
+    card_shadow = "0 2px 4px rgba(0,0,0,0.05)"
+    
     # Analyze buttons
     button_selector = r'(?:\.btn|button|input\[type="submit"\]|\.button)\s*{([^}]*)}'
     button_match = re.search(button_selector, css_content)
-    if button_match:
+    if button_match and button_match.group(1):
         button_props = button_match.group(1)
         
-        if 'border-radius' in button_props:
-            radius_match = re.search(r'border-radius\s*:\s*([^;]+)', button_props)
-            radius = radius_match.group(1) if radius_match else "0"
+        # Extract button radius
+        radius_match = re.search(r'border-radius\s*:\s*([^;]+)', button_props)
+        if radius_match and radius_match.group(1):
+            button_radius = radius_match.group(1).strip()
             
-            if '0' in radius:
+            # Classify button style based on radius
+            if '0' in button_radius:
                 button_style = "Square buttons"
-            elif 'px' in radius and int(re.search(r'(\d+)px', radius).group(1)) < 5:
-                button_style = "Slightly rounded buttons"
-            elif 'px' in radius and int(re.search(r'(\d+)px', radius).group(1)) >= 20:
-                button_style = "Pill-shaped buttons"
+            elif 'px' in button_radius:
+                radius_px_match = re.search(r'(\d+)px', button_radius)
+                if radius_px_match and radius_px_match.group(1):
+                    radius_px = int(radius_px_match.group(1))
+                    if radius_px < 5:
+                        button_style = "Slightly rounded buttons"
+                    elif radius_px >= 20:
+                        button_style = "Pill-shaped buttons"
+                    else:
+                        button_style = "Rounded buttons"
             else:
                 button_style = "Rounded buttons"
+        
+        # Extract button padding
+        padding_match = re.search(r'padding\s*:\s*([^;]+)', button_props)
+        if padding_match and padding_match.group(1):
+            button_padding = padding_match.group(1).strip()
+        
+        # Extract button background
+        bg_match = re.search(r'background(?:-color)?\s*:\s*([^;]+)', button_props)
+        if bg_match and bg_match.group(1):
+            button_bg = bg_match.group(1).strip()
+        
+        # Extract button text color
+        color_match = re.search(r'color\s*:\s*([^;]+)', button_props)
+        if color_match and color_match.group(1):
+            button_color = color_match.group(1).strip()
         
         if 'box-shadow' in button_props:
             button_style += " with shadow effect"
@@ -357,26 +467,88 @@ def extract_components(soup, css_content):
         if 'transition' in button_props or ':hover' in css_content:
             button_style += " and hover animation"
     
+    # Look for button hover styles
+    button_hover_selector = r'(?:\.btn|button|input\[type="submit"\]|\.button):hover\s*{([^}]*)}'
+    button_hover_match = re.search(button_hover_selector, css_content)
+    if button_hover_match and button_hover_match.group(1):
+        hover_props = button_hover_match.group(1)
+        
+        # Extract hover background
+        hover_bg_match = re.search(r'background(?:-color)?\s*:\s*([^;]+)', hover_props)
+        if hover_bg_match and hover_bg_match.group(1):
+            button_hover_bg = hover_bg_match.group(1).strip()
+    
     # Analyze links
     link_selector = r'a\s*{([^}]*)}'
     link_match = re.search(link_selector, css_content)
-    if link_match:
+    if link_match and link_match.group(1):
         link_props = link_match.group(1)
         
+        # Extract link text decoration
+        decoration_match = re.search(r'text-decoration\s*:\s*([^;]+)', link_props)
+        if decoration_match and decoration_match.group(1):
+            link_decoration = decoration_match.group(1).strip()
+            
         if 'text-decoration' in link_props:
             if 'none' in link_props:
                 link_style = "Non-underlined links"
             else:
                 link_style = "Underlined links"
         
+        # Extract link color
+        color_match = re.search(r'color\s*:\s*([^;]+)', link_props)
+        if color_match and color_match.group(1):
+            link_color = color_match.group(1).strip()
+        
         if 'transition' in link_props or 'a:hover' in css_content:
             link_style += " with hover effect"
+    
+    # Look for link hover styles
+    link_hover_selector = r'a:hover\s*{([^}]*)}'
+    link_hover_match = re.search(link_hover_selector, css_content)
+    if link_hover_match and link_hover_match.group(1):
+        hover_props = link_hover_match.group(1)
+        
+        # Extract hover decoration
+        hover_decoration_match = re.search(r'text-decoration\s*:\s*([^;]+)', hover_props)
+        if hover_decoration_match and hover_decoration_match.group(1):
+            link_hover_decoration = hover_decoration_match.group(1).strip()
+        
+        # Extract hover color
+        hover_color_match = re.search(r'color\s*:\s*([^;]+)', hover_props)
+        if hover_color_match and hover_color_match.group(1):
+            link_hover_color = hover_color_match.group(1).strip()
     
     # Analyze cards or similar container elements
     card_selector = r'(?:\.card|\.box|\.container|\.panel)\s*{([^}]*)}'
     card_match = re.search(card_selector, css_content)
-    if card_match:
+    if card_match and card_match.group(1):
         card_props = card_match.group(1)
+        
+        # Extract card padding
+        padding_match = re.search(r'padding\s*:\s*([^;]+)', card_props)
+        if padding_match and padding_match.group(1):
+            card_padding = padding_match.group(1).strip()
+        
+        # Extract card margin
+        margin_match = re.search(r'margin\s*:\s*([^;]+)', card_props)
+        if margin_match and margin_match.group(1):
+            card_margin = margin_match.group(1).strip()
+        
+        # Extract card border
+        border_match = re.search(r'border\s*:\s*([^;]+)', card_props)
+        if border_match and border_match.group(1):
+            card_border = border_match.group(1).strip()
+        
+        # Extract card radius
+        radius_match = re.search(r'border-radius\s*:\s*([^;]+)', card_props)
+        if radius_match and radius_match.group(1):
+            card_radius = radius_match.group(1).strip()
+        
+        # Extract card shadow
+        shadow_match = re.search(r'box-shadow\s*:\s*([^;]+)', card_props)
+        if shadow_match and shadow_match.group(1):
+            card_shadow = shadow_match.group(1).strip()
         
         if 'border' in card_props:
             card_style = "Bordered cards"
@@ -394,5 +566,25 @@ def extract_components(soup, css_content):
     return {
         "buttonStyle": button_style,
         "linkStyle": link_style,
-        "cardStyle": card_style
+        "cardStyle": card_style,
+        "buttonProperties": {
+            "radius": button_radius,
+            "padding": button_padding,
+            "backgroundColor": button_bg,
+            "textColor": button_color,
+            "hoverBackgroundColor": button_hover_bg
+        },
+        "linkProperties": {
+            "decoration": link_decoration,
+            "hoverDecoration": link_hover_decoration,
+            "color": link_color,
+            "hoverColor": link_hover_color
+        },
+        "cardProperties": {
+            "padding": card_padding,
+            "margin": card_margin,
+            "border": card_border,
+            "borderRadius": card_radius,
+            "boxShadow": card_shadow
+        }
     }
