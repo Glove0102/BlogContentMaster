@@ -145,7 +145,15 @@ def create_download_package(project, blog_posts):
                 # Add links to blog posts
                 post_links = ""
                 for post in blog_posts:
-                    post_links += f'<div class="blog-post-card"><h3><a href="posts/{post.id}.html">{post.title}</a></h3></div>\n'
+                    post_date = post.created_at.strftime("%B %d, %Y") if hasattr(post, 'created_at') else ""
+                    post_links += f'''
+                    <div class="blog-post-card">
+                        <h3><a href="posts/{post.id}.html">{post.title}</a></h3>
+                        <p class="post-date">{post_date}</p>
+                        <p class="post-excerpt">{post.meta_description if post.meta_description else ''}</p>
+                        <a href="posts/{post.id}.html" class="btn">Read More</a>
+                    </div>
+                    '''
                 
                 # Replace placeholder with actual post links
                 blog_html = blog_html.replace('<!-- BLOG_POSTS_PLACEHOLDER -->', post_links)
@@ -162,13 +170,75 @@ def create_download_package(project, blog_posts):
             if blog_posts:
                 # Add each blog post as an HTML file
                 for post in blog_posts:
-                    post_html = post.html_content
-                    
-                    # Fix the CSS and JS links to use local paths
-                    post_html = post_html.replace(f'https://ourdomain.com/cssstyles/{project.hosted_css_filename}', '../assets/css/blog-styles.css')
-                    if project.hosted_js_filename:
-                        post_html = post_html.replace(f'https://ourdomain.com/scripts/{project.hosted_js_filename}', '../assets/js/blog-scripts.js')
+                    # Check if we have a complete HTML document or just content fragment
+                    if post.html_content and ('<html' in post.html_content):
+                        post_html = post.html_content
                         
+                        # Fix the CSS and JS links to use local paths
+                        post_html = post_html.replace(f'https://ourdomain.com/cssstyles/{project.hosted_css_filename}', '../assets/css/blog-styles.css')
+                        if project.hosted_js_filename:
+                            post_html = post_html.replace(f'https://ourdomain.com/scripts/{project.hosted_js_filename}', '../assets/js/blog-scripts.js')
+                    else:
+                        # We have just the content fragment, not a complete document
+                        # Use the post template to create a complete HTML document
+                        if project.post_template_html:
+                            post_date = post.created_at.strftime("%B %d, %Y") if hasattr(post, 'created_at') else ""
+                            meta_desc = post.meta_description if post.meta_description else f"Read our blog post about {post.title}"
+                            
+                            # Start with the template
+                            post_html = project.post_template_html
+                            
+                            # Replace placeholder values with actual content
+                            post_html = post_html.replace("{{title}}", post.title)
+                            post_html = post_html.replace("{{meta_description}}", meta_desc)
+                            post_html = post_html.replace("{{post_date}}", post_date)
+                            post_html = post_html.replace("{{content}}", post.html_content or post.content)
+                            
+                            # Fix the CSS and JS links to use local paths
+                            post_html = post_html.replace(f'https://ourdomain.com/cssstyles/{project.hosted_css_filename}', '../assets/css/blog-styles.css')
+                            if project.hosted_js_filename:
+                                post_html = post_html.replace(f'https://ourdomain.com/scripts/{project.hosted_js_filename}', '../assets/js/blog-scripts.js')
+                        else:
+                            # Fallback to basic HTML if no template is available
+                            post_date = post.created_at.strftime("%B %d, %Y") if hasattr(post, 'created_at') else ""
+                            post_html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{post.title}</title>
+    <link rel="stylesheet" href="../assets/css/blog-styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <h1 class="site-title">{project.name} Blog</h1>
+            <nav class="site-navigation">
+                <a href="../index.html">Home</a>
+                <a href="../blog.html">Blog</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <article class="blog-post">
+            <h1 class="post-title">{post.title}</h1>
+            <div class="post-meta">Published on {post_date}</div>
+            <div class="post-content">
+                {post.html_content or post.content}
+            </div>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; {datetime.now().year} - All rights reserved</p>
+        </div>
+    </footer>
+</body>
+</html>"""
+                    
+                    # Write the post HTML to the ZIP file
                     zf.writestr(f'blog/posts/{post.id}.html', post_html)
             
             # Create assets directories
@@ -177,21 +247,49 @@ def create_download_package(project, blog_posts):
             
             # Create css directory and add CSS file
             css_content = ""
-            if project.hosted_css_filename:
-                css_path = os.path.join(app.config['HOSTED_FILES_FOLDER'], 'cssstyles', project.hosted_css_filename)
-                if os.path.exists(css_path):
-                    with open(css_path, 'r', encoding='utf-8') as css_file:
+            
+            # Start with original CSS if available
+            if project.css_file_path and os.path.exists(project.css_file_path):
+                try:
+                    with open(project.css_file_path, 'r', encoding='utf-8') as css_file:
                         css_content = css_file.read()
+                except:
+                    pass
+            
+            # Add hosted CSS if available 
+            if project.hosted_css_filename:
+                css_path = os.path.join(app.config.get('HOSTED_FILES_FOLDER', 'static/hosted_files'), 'cssstyles', project.hosted_css_filename)
+                if os.path.exists(css_path):
+                    try:
+                        with open(css_path, 'r', encoding='utf-8') as css_file:
+                            hosted_css = css_file.read()
+                            if hosted_css and not css_content:
+                                css_content = hosted_css
+                            elif hosted_css:
+                                css_content += "\n\n/* Additional styles */\n" + hosted_css
+                    except:
+                        pass
+            
+            # Extract custom CSS from template
+            if project.blog_template_html:
+                css_match = re.search(r'<style>(.*?)</style>', project.blog_template_html, re.DOTALL)
+                if css_match:
+                    custom_css = css_match.group(1)
+                    if custom_css:
+                        css_content += "\n\n/* Custom blog styles */\n" + custom_css
             
             zf.writestr('blog/assets/css/blog-styles.css', css_content)
             
             # Create js directory and add JS file
             js_content = ""
             if project.hosted_js_filename:
-                js_path = os.path.join(app.config['HOSTED_FILES_FOLDER'], 'scripts', project.hosted_js_filename)
+                js_path = os.path.join(app.config.get('HOSTED_FILES_FOLDER', 'static/hosted_files'), 'scripts', project.hosted_js_filename)
                 if os.path.exists(js_path):
-                    with open(js_path, 'r', encoding='utf-8') as js_file:
-                        js_content = js_file.read()
+                    try:
+                        with open(js_path, 'r', encoding='utf-8') as js_file:
+                            js_content = js_file.read()
+                    except:
+                        pass
             
             zf.writestr('blog/assets/js/blog-scripts.js', js_content)
             
