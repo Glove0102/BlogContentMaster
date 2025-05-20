@@ -117,15 +117,21 @@ def upload_files(project_id):
     project.hosted_css_filename = css_filename
     project.hosted_js_filename = js_filename
     
-    # Copy CSS file to hosted directory
-    from utils.file_storage import copy_css_to_hosted
-    hosted_css_path = copy_css_to_hosted(css_path, css_filename)
-    
     # Merge analysis results
     project.style_analysis = {
         **analysis_result,
         **website_analysis
     }
+    
+    # Generate CSS content based on analysis
+    from utils.html_generator import generate_blog_stylesheet_content
+    from utils.file_storage import save_content_to_hosted_file
+    
+    # Generate the CSS content
+    css_content = generate_blog_stylesheet_content(project.style_analysis)
+    
+    # Save the generated CSS to the hosted directory
+    hosted_css_path = save_content_to_hosted_file(css_content, css_filename, 'cssstyles')
     
     # Generate blog and post templates
     blog_template = generate_blog_template(

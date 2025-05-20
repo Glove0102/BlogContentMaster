@@ -6,6 +6,7 @@ import time
 import zipfile
 import logging
 import re
+from datetime import datetime
 from werkzeug.utils import secure_filename
 from app import app
 from flask import url_for, request
@@ -119,6 +120,36 @@ def copy_css_to_hosted(css_file_path, hosted_css_filename):
     
     except Exception as e:
         logging.error(f"Error copying CSS to hosted directory: {str(e)}")
+        raise e
+        
+def save_content_to_hosted_file(content_string, filename, folder_name):
+    """
+    Save a string content to a file in the specified hosted_files subfolder.
+    
+    Args:
+        content_string: The string content to save
+        filename: The filename to use
+        folder_name: The subfolder name (e.g., 'cssstyles', 'scripts')
+        
+    Returns:
+        The full path to the saved file
+    """
+    try:
+        # Ensure the folder exists
+        folder_path = os.path.join(app.config.get('HOSTED_FILES_FOLDER', 'static/hosted_files'), folder_name)
+        os.makedirs(folder_path, exist_ok=True)
+        
+        # Create the full path
+        file_path = os.path.join(folder_path, filename)
+        
+        # Write the content to the file
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(content_string)
+        
+        return file_path
+    
+    except Exception as e:
+        logging.error(f"Error saving content to hosted file: {str(e)}")
         raise e
 
 def create_download_package(project, blog_posts):
