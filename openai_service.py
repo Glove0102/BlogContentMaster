@@ -96,7 +96,7 @@ def analyze_website_content(html_path, css_path, website_purpose):
         
         # Call OpenAI API
         response = openai.chat.completions.create(
-            model="gpt-4.1-nano-2025-04-14",
+            model="o4-mini-2025-04-16",
             messages=[
                 {"role": "system", "content": "You are a design analyzer specializing in website style analysis."},
                 {"role": "user", "content": prompt}
@@ -227,7 +227,7 @@ def generate_blog_title(topic=None, inspiration_url=None, website_info=None):
         
         # Call OpenAI API
         response = openai.chat.completions.create(
-            model="gpt-4.1-nano-2025-04-14",
+            model="o4-mini-2025-04-16",
             messages=[
                 {"role": "system", "content": "You are a professional blog title generator with expertise in SEO and content marketing."},
                 {"role": "user", "content": prompt}
@@ -331,7 +331,7 @@ def generate_blog_content(title, topic=None, content=None, inspiration_url=None,
         
         # Call OpenAI API
         response = openai.chat.completions.create(
-            model="gpt-4.1-nano-2025-04-14",
+            model="o4-mini-2025-04-16",
             messages=[
                 {"role": "system", "content": "You are a professional blog content writer specializing in creating content that matches a website's style and purpose."},
                 {"role": "user", "content": prompt}
@@ -367,7 +367,7 @@ def generate_blog_content(title, topic=None, content=None, inspiration_url=None,
         """
         
         meta_response = openai.chat.completions.create(
-            model="gpt-4.1-nano-2025-04-14",
+            model="o4-mini-2025-04-16",
             messages=[
                 {"role": "system", "content": "You are an SEO specialist creating meta descriptions. You must generate descriptions that use between 150-160 characters."},
                 {"role": "user", "content": meta_description_prompt}
