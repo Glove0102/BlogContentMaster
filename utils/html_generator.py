@@ -627,18 +627,16 @@ def generate_post_template(analysis_result, css_filename, js_filename, title="",
 </html>"""
 
         
-        # Create the HTML template with link to external CSS and embedded CSS
+        # Create the HTML template with link to external CSS (no embedded style)
         template = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{title}} - {business.get('name', 'Blog')}</title>
-    <meta name="description" content="{{meta_description}}">
-    <link rel="stylesheet" href="https://ourdomain.com/cssstyles/{css_filename}">
-    <style>
-        {custom_css}
-    </style>
+    <title>{{{{title}}}} - {business.get('name', 'Blog')}</title>
+    <meta name="description" content="{{{{meta_description}}}}">
+    <link rel="stylesheet" href="https://{{{{request.host}}}}/hosted_files/cssstyles/{css_filename}">
+    {f'<script src="https://{{{{request.host}}}}/hosted_files/scripts/{js_filename}" defer></script>' if js_filename else ''}
 </head>
 <body>
     <header class="site-header">
@@ -646,7 +644,7 @@ def generate_post_template(analysis_result, css_filename, js_filename, title="",
             <h1 class="site-title">{business.get('name', 'Our')} Blog</h1>
             <nav class="site-navigation">
                 <a href="../index.html">Home</a>
-                <a href="blog.html">Blog</a>
+                <a href="../blog.html">Blog</a>
                 <a href="../index.html#contact">Contact</a>
             </nav>
         </div>
