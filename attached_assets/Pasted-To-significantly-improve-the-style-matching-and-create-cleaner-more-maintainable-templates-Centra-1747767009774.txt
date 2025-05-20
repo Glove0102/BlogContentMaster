@@ -1,0 +1,63 @@
+To significantly improve the style matching and create cleaner, more maintainable templates:
+
+Centralize CSS Generation (New Function in html_generator.py):
+
+Create a new function, for example, generate_blog_stylesheet_content(analysis_result).
+This function will take the analysis_result and generate a complete string of CSS rules designed to make the blog match the original site's style as closely as possible. This generated CSS should be comprehensive.
+The current custom_css logic inside generate_blog_template and generate_post_template should be moved into and expanded within this new function.
+Modify routes.py (upload_files function):
+
+After obtaining project.style_analysis, call generate_blog_stylesheet_content(project.style_analysis) to get the complete CSS string.
+Instead of copy_css_to_hosted, use a new function in utils/file_storage.py (e.g., save_content_to_hosted_file(content_string, filename, folder_name)) to save this newly generated CSS string to a file in hosted_files/cssstyles/. The project.hosted_css_filename should store the name of this newly generated file.
+The css_filename passed to generate_blog_template and generate_post_template will now be the name of this newly generated and saved CSS file.
+Update HTML Templates in html_generator.py:
+
+Remove the embedded <style>{custom_css}</style> block entirely from generate_blog_template and generate_post_template.
+These functions should only link to the single, newly generated, hosted CSS file using the css_filename provided (e.g., <link rel="stylesheet" href="https://{{request.host}}/hosted_files/cssstyles/{css_filename}">).
+Update utils/file_storage.py (create_download_package):
+
+When creating blog/assets/css/blog-styles.css for the ZIP package, it should read the content of the single, generated CSS file from hosted_files/cssstyles/{project.hosted_css_filename}.
+Do not combine it with the original uploaded CSS or extract from style tags. The goal is one clean, authoritative CSS file for the blog.
+Example Snippet for routes.py (Conceptual):
+
+Python
+
+# In routes.py, inside upload_files function:
+# ... (after project.style_analysis is populated)
+
+from utils.html_generator import generate_blog_stylesheet_content # NEW
+from utils.file_storage import save_content_to_hosted_file # NEW (you'll need to create this)
+
+# 1. Generate the NEW CSS content string
+new_css_content_string = generate_blog_stylesheet_content(project.style_analysis)
+
+# 2. Save this NEW CSS content to a hosted file
+timestamp = int(time.time())
+new_hosted_css_filename = f"{project.id}_{timestamp}_generated.css"
+save_content_to_hosted_file(new_css_content_string, new_hosted_css_filename, 'cssstyles')
+project.hosted_css_filename = new_hosted_css_filename # This now refers to the GENERATED CSS
+
+# (Optional: If you still want to keep a record of the original uploaded CSS path,
+# you can store it in a different model field, but it shouldn't be used for blog styling directly)
+
+db.session.commit() # Save the new hosted_css_filename
+
+# 3. Generate templates, they will link to this new_hosted_css_filename
+blog_template_html = generate_blog_template(
+    analysis_result=project.style_analysis,
+    css_filename=project.hosted_css_filename, # Pass the name of the new generated file
+    js_filename=project.hosted_js_filename
+)
+post_template_html = generate_post_template(
+    analysis_result=project.style_analysis,
+    css_filename=project.hosted_css_filename, # Pass the name of the new generated file
+    js_filename=project.hosted_js_filename
+)
+# ... rest of the function ...
+By implementing these changes, you will have a cleaner separation of concerns:
+
+html_analyzer.py and openai_service.py focus on detailed analysis.
+html_generator.py has one function to generate the complete CSS string based on analysis, and other functions to generate HTML structures that only link to this CSS.
+routes.py orchestrates the saving of this generated CSS.
+file_storage.py correctly packages this single generated CSS file for download.
+This approach should lead to a more accurate and manageable styling solution for your generated blogs.
