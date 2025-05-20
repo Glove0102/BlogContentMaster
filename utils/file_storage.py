@@ -5,6 +5,7 @@ import uuid
 import time
 import zipfile
 import logging
+import re
 from werkzeug.utils import secure_filename
 from app import app
 from flask import url_for, request
