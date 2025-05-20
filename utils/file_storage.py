@@ -280,35 +280,27 @@ def create_download_package(project, blog_posts):
             # Create css directory and add CSS file
             css_content = ""
             
-            # Start with original CSS if available
-            if project.css_file_path and os.path.exists(project.css_file_path):
-                try:
-                    with open(project.css_file_path, 'r', encoding='utf-8') as css_file:
-                        css_content = css_file.read()
-                except:
-                    pass
-            
-            # Add hosted CSS if available 
+            # Use the generated CSS file as the single source of styles
             if project.hosted_css_filename:
                 css_path = os.path.join(app.config.get('HOSTED_FILES_FOLDER', 'static/hosted_files'), 'cssstyles', project.hosted_css_filename)
                 if os.path.exists(css_path):
                     try:
                         with open(css_path, 'r', encoding='utf-8') as css_file:
-                            hosted_css = css_file.read()
-                            if hosted_css and not css_content:
-                                css_content = hosted_css
-                            elif hosted_css:
-                                css_content += "\n\n/* Additional styles */\n" + hosted_css
-                    except:
-                        pass
-            
-            # Extract custom CSS from template
-            if project.blog_template_html:
-                css_match = re.search(r'<style>(.*?)</style>', project.blog_template_html, re.DOTALL)
-                if css_match:
-                    custom_css = css_match.group(1)
-                    if custom_css:
-                        css_content += "\n\n/* Custom blog styles */\n" + custom_css
+                            css_content = css_file.read()
+                    except Exception as e:
+                        logging.error(f"Error reading hosted CSS file: {str(e)}")
+                        # If we can't read the generated CSS, fall back to a basic one
+                        css_content = """
+                        /* Basic fallback stylesheet */
+                        body {
+                            font-family: sans-serif;
+                            font-size: 16px;
+                            line-height: 1.6;
+                            color: #333;
+                            margin: 0;
+                            padding: 0;
+                        }
+                        """
             
             zf.writestr('blog/assets/css/blog-styles.css', css_content)
             
